@@ -87,3 +87,39 @@
                                   (card 'Spade 'Queen)
                                   (card 'Spade 'Ace)))
               21))
+
+(define-type Judgement (U 'Natural-Blackjack 'Win 'Lose 'Push))
+(define-predicate win? 'Win)
+(define-predicate lose? 'Lose)
+(define-predicate push? 'Push)
+
+(: judge (-> Score Score Judgement))
+(define (judge player-score dealer-score)
+  (cond
+    [(and (natural-blackjack? player-score)
+          (natural-blackjack? dealer-score))
+     'Push]
+    [(natural-blackjack? player-score)
+     'Natural-Blackjack]
+    [(natural-blackjack? dealer-score)
+     'Lose]
+    [(bust? player-score) 'Lose]
+    [(bust? dealer-score) 'Win]
+    [(< player-score dealer-score) 'Lose]
+    [(> player-score dealer-score) 'Win]
+    [else 'Push]))
+
+(module+ test
+  (check-pred push?
+              (judge 'Natural-Blackjack
+                     'Natural-Blackjack))
+  (check-pred natural-blackjack?
+              (judge 'Natural-Blackjack
+                     21))
+  (check-pred lose?
+             (judge 21
+                    'Natural-Blackjack))
+  (check-pred push?
+              (judge 10 10))
+  (check-pred win?
+              (judge 15 10)))
