@@ -122,4 +122,8 @@
   (check-pred push?
               (judge 10 10))
   (check-pred win?
-              (judge 15 10)))
+              (judge 15 10))
+  (check-pred lose?
+              (judge 'Bust 3))
+  (check-pred win?
+              (judge 2 'Bust)))
