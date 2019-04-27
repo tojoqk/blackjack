@@ -43,3 +43,47 @@
 (: cards (Listof card))
 (define cards
   (product card suits ranks))
+
+(define-type Score (U Integer 'Natural-Blackjack 'Bust))
+(define-predicate natural-blackjack? 'Natural-Blackjack)
+(define-predicate bust? 'Bust)
+
+(: cards->score (-> (Listof card) Score))
+(define (cards->score cs)
+  (: cards->score* (-> (Listof card) Integer))
+  (define (cards->score* cs)
+    (let ([rs (map card-rank cs)])
+      (let ([score-without-aces
+             (+ (foldl + 0 (filter rank-number? rs))
+                (* 10 (count rank-face? rs)))])
+        (let add-ace-scores ([score* score-without-aces]
+                             [ace-count (count rank-ace? rs)])
+          (cond
+            [(zero? ace-count) score*]
+            [(<= (+ score* (* ace-count 11)) 21)
+             (+ score* (* ace-count 11))]
+            [else
+             (add-ace-scores (+ score* 1)
+                             (- ace-count 1))])))))
+  (let ([score* (cards->score* cs)])
+    (cond
+      [(and (= (length cs) 2)
+            (= score* 21))
+       'Natural-Blackjack]
+      [(< 21 score*)
+       'Bust]
+      [else
+       score*])))
+
+(module+ test
+  (check-eqv? (cards->score (list (card 'Spade 'Jack)
+                                  (card 'Spade 'Ace)))
+              'Natural-Blackjack)
+  (check-eqv? (cards->score (list (card 'Spade 'Jack)
+                                  (card 'Spade 10)
+                                  (card 'Spade 2)))
+              'Bust)
+  (check-eqv? (cards->score (list (card 'Spade 'Jack)
+                                  (card 'Spade 'Queen)
+                                  (card 'Spade 'Ace)))
+              21))
