@@ -1,4 +1,12 @@
 #lang typed/racket
+(provide Suit suit?
+         Rank rank?
+         card card?
+         cards
+         Score natural-blackjack? bust?
+         cards->score
+         Judgement win? lose? push?
+         judge)
 
 (module+ test
   (require typed/rackunit))
