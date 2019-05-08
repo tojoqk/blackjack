@@ -27,10 +27,9 @@
 
 (: product (All (A B C) (-> (-> A B C) (Listof A) (Listof B) (Listof C))))
 (define (product f xs ys)
-  (if (null? xs)
-      '()
-      (append (map (lambda ([y : B]) (f (car xs) y)) ys)
-              (product f (cdr xs) ys))))
+  (for*/list : (Listof C) ([x : A xs]
+                           [y : B ys])
+    (f x y)))
 
 (module+ test
   (check-equal? (product (inst cons Integer Symbol)
