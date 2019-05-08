@@ -88,7 +88,7 @@
                                   (card 'Spade 'Ace)))
               21))
 
-(define-type Judgement (U 'Natural-Blackjack 'Win 'Lose 'Push))
+(define-type Judgement (U 'Win 'Lose 'Push))
 (define-predicate win? 'Win)
 (define-predicate lose? 'Lose)
 (define-predicate push? 'Push)
@@ -100,7 +100,7 @@
           (natural-blackjack? dealer-score))
      'Push]
     [(natural-blackjack? player-score)
-     'Natural-Blackjack]
+     'Win]
     [(natural-blackjack? dealer-score)
      'Lose]
     [(bust? player-score) 'Lose]
