@@ -113,12 +113,12 @@
   (check-pred push?
               (judge 'Natural-Blackjack
                      'Natural-Blackjack))
-  (check-pred natural-blackjack?
+  (check-pred win?
               (judge 'Natural-Blackjack
                      21))
   (check-pred lose?
-             (judge 21
-                    'Natural-Blackjack))
+              (judge 21
+                     'Natural-Blackjack))
   (check-pred push?
               (judge 10 10))
   (check-pred win?
