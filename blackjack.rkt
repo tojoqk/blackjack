@@ -12,7 +12,8 @@
 (define-predicate rank-face? (U 'Jack 'Queen 'King))
 (define-predicate rank-ace? 'Ace)
 
-(struct card ([suit : Suit] [rank : Rank]))
+(struct card ([suit : Suit] [rank : Rank])
+  #:transparent)
 
 (: suits (Listof Suit))
 (define suits '(Spade Club Heart Diamond))
