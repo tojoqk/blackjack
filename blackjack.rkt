@@ -1,4 +1,5 @@
-#lang typed/racket
+#lang 2d typed/racket
+(require 2d/cond)
 (provide Suit suit?
          Rank rank?
          card card?
@@ -102,20 +103,21 @@
 (define-predicate push? 'Push)
 
 (: judge (-> Score Score Judgement))
-(define (judge player-score dealer-score)
-  (cond
-    [(and (natural-blackjack? player-score)
-          (natural-blackjack? dealer-score))
-     'Push]
-    [(natural-blackjack? player-score)
-     'Win]
-    [(natural-blackjack? dealer-score)
-     'Lose]
-    [(bust? player-score) 'Lose]
-    [(bust? dealer-score) 'Win]
-    [(< player-score dealer-score) 'Lose]
-    [(> player-score dealer-score) 'Win]
-    [else 'Push]))
+(define (judge p d)
+  (define natural21? natural-blackjack?)
+  #2dcond
+  ╔═════════════════╦═════════════════╦═══════════╦═══════════════════╗
+  ║                 ║ (natural21? d)  ║ (bust? d) ║       else        ║
+  ╠═════════════════╬═════════════════╬═══════════╩═══════════════════╣
+  ║ (natural21? p)  ║      'Push      ║             'Win              ║
+  ╠═════════════════╬═════════════════╩═══════════════════════════════╣
+  ║    (bust? p)    ║                      'Lose                      ║
+  ╠═════════════════╣                 ╔═══════════╦═══════════════════╣
+  ║                 ║                 ║           ║ (cond             ║
+  ║     else        ║                 ║   'Win    ║   [(> p d) 'Win]  ║
+  ║                 ║                 ║           ║   [(< p d) 'Lose] ║
+  ║                 ║                 ║           ║   [else 'Push])   ║
+  ╚═════════════════╩═════════════════╩═══════════╩═══════════════════╝)
 
 (module+ test
   (check-pred push?
