@@ -42,7 +42,7 @@
     (f x y)))
 
 (module+ test
-  (check-equal? (product (inst cons Integer Symbol)
+  (check-equal? (product (inst cons Natural Symbol)
                          '(1 2 3)
                          '(a b c))
                 (list '(1 . a) '(1 . b) '(1 . c)
@@ -53,7 +53,7 @@
 (define cards
   (product card suits ranks))
 
-(define-type Score (U Integer 'Natural-Blackjack 'Bust))
+(define-type Score (U Natural 'Natural-Blackjack 'Bust))
 (define-predicate natural-blackjack? 'Natural-Blackjack)
 (define-predicate bust? 'Bust)
 
@@ -65,8 +65,9 @@
       (let ([score-without-aces
              (+ (foldl + 0 (filter rank-number? rs))
                 (* 10 (count rank-face? rs)))])
-        (let add-ace-scores ([score* score-without-aces]
-                             [ace-count (count rank-ace? rs)])
+        (let add-ace-scores : Natural
+             ([score* : Natural score-without-aces]
+              [ace-count : Natural (count rank-ace? rs)])
           (cond
             [(zero? ace-count) score*]
             [(<= (+ score* (* ace-count 11)) 21)
