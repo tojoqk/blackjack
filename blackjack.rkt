@@ -2,7 +2,7 @@
 (require 2d/cond)
 (provide Suit suit?
          Rank rank?
-         card card?
+         Card card card?
          cards
          Score natural-blackjack? bust?
          cards->score
@@ -22,7 +22,8 @@
 (define-predicate rank-ace? 'Ace)
 
 (struct card ([suit : Suit] [rank : Rank])
-  #:transparent)
+  #:transparent
+  #:type-name Card)
 
 (: suits (Listof Suit))
 (define suits '(Spade Club Heart Diamond))
@@ -49,7 +50,7 @@
                       '(2 . a) '(2 . b) '(2 . c)
                       '(3 . a) '(3 . b) '(3 . c))))
 
-(: cards (Listof card))
+(: cards (Listof Card))
 (define cards
   (product card suits ranks))
 
@@ -57,9 +58,9 @@
 (define-predicate natural-blackjack? 'Natural-Blackjack)
 (define-predicate bust? 'Bust)
 
-(: cards->score (-> (Listof card) Score))
+(: cards->score (-> (Listof Card) Score))
 (define (cards->score cs)
-  (: cards->score* (-> (Listof card) Integer))
+  (: cards->score* (-> (Listof Card) Natural))
   (define (cards->score* cs)
     (let ([rs (map card-rank cs)])
       (let ([score-without-aces
