@@ -22,7 +22,7 @@
 (define-predicate rank-ace? 'Ace)
 
 (struct card ([suit : Suit] [rank : Rank])
-  #:prefab
+  #:transparent
   #:type-name Card)
 
 (: suits (Listof Suit))
