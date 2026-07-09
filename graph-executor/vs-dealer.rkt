@@ -393,7 +393,7 @@
   (define-values (gen-entry entry)
     (entry-graph "Lobby"))
   (define-values (gen-bj hello idle)
-    (bj-graph "Black Jack"))
+    (bj-graph "Blackjack"))
   (define-values (gen-playing start)
     (bj-playing-graph "Playing"))
 
@@ -405,7 +405,7 @@
                  (gen-playing idle identity)
                  bj-playing?)
                 (open-graph->any-graph
-                 (gen-entry (list (list "Entry Black Jack"
+                 (gen-entry (list (list "Entry Blackjack"
                                         (node->any-node hello bj-state?)
                                         (lambda (pl) (make-bj-state pl n)))))
                  player?))
