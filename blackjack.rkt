@@ -6,7 +6,7 @@
          cards
          Score natural-blackjack? bust?
          cards->score
-         Judgement win? lose? push?
+         Judgement bj-win? win? lose? push?
          judge)
 
 (module+ test
@@ -99,7 +99,8 @@
                                   (card 'Spade 'Ace)))
               21))
 
-(define-type Judgement (U 'Win 'Lose 'Push))
+(define-type Judgement (U 'BJ-Win 'Win 'Lose 'Push))
+(define-predicate bj-win? 'BJ-Win)
 (define-predicate win? 'Win)
 (define-predicate lose? 'Lose)
 (define-predicate push? 'Push)
@@ -111,7 +112,7 @@
   ╔═════════════════╦═════════════════╦═══════════╦═══════════════════╗
   ║                 ║ (natural21? d)  ║ (bust? d) ║       else        ║
   ╠═════════════════╬═════════════════╬═══════════╩═══════════════════╣
-  ║ (natural21? p)  ║      'Push      ║             'Win              ║
+  ║ (natural21? p)  ║      'Push      ║           'BJ-Win             ║
   ╠═════════════════╬═════════════════╩═══════════════════════════════╣
   ║    (bust? p)    ║                      'Lose                      ║
   ╠═════════════════╣                 ╔═══════════╦═══════════════════╣
@@ -125,7 +126,7 @@
   (check-pred push?
               (judge 'Natural-Blackjack
                      'Natural-Blackjack))
-  (check-pred win?
+  (check-pred bj-win?
               (judge 'Natural-Blackjack
                      21))
   (check-pred lose?
