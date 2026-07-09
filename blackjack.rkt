@@ -2,7 +2,7 @@
 (require 2d/cond)
 (provide Suit suit?
          Rank rank?
-         Card card card?
+         Card card card? card-suit card-rank
          cards
          Score natural-blackjack? bust?
          cards->score
