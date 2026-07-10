@@ -40,7 +40,8 @@
 (struct bj-state ([player : Player]
                   [shoe : (Listof (U 'cut-card Card))]
                   [discard : (Listof Card)]
-                  [seen-cut-card? : Boolean])
+                  [seen-cut-card? : Boolean]
+                  [num-of-decks : Positive-Integer])
   #:type-name BJ-State
   #:transparent)
 
@@ -53,7 +54,7 @@
 
 (: make-bj-state (-> Player Positive-Integer BJ-State))
 (define (make-bj-state pl n)
-  (bj-state pl '() (make-cards n) #f))
+  (bj-state pl '() (make-cards n) #f n))
 
 (define-type BJ-Type (U 'player 'dealer))
 
@@ -75,6 +76,16 @@
       (define-values (buffer head) (split-at new-shoe block-margin))
       (struct-copy bj-state st
                    [shoe (append head (cons 'cut-card buffer))]))))
+
+(: initial-cut-messsage (-> BJ-State BJ-State))
+(define (initial-cut-messsage st)
+  (message
+   (format "Dealer mixed and shuffled ~a ~a."
+           (bj-state-num-of-decks st)
+           (if (= (bj-state-num-of-decks st) 1)
+               "deck"
+               "decks")))
+  st)
 
 (: show-player-wallet (-> BJ-State BJ-State))
 (define (show-player-wallet st)
@@ -105,11 +116,12 @@
      (bj-graph g
                #:edges
                (list (bj-edge "Initial Cut" #:dom hello #:cod idle #:mode 'auto
-                              #:trans reset-shoe)
+                              #:trans (compose initial-cut-messsage reset-shoe))
                      (bj-edge "Cut"
                               #:dom idle #:cod idle #:mode 'auto
                               #:when bj-state-seen-cut-card?
-                              #:trans (compose reset-shoe reset-seen-cut-card))
+                              #:trans (compose (bj-show "Dealer collected discards and shuffled the shoe.")
+                                               (compose reset-shoe reset-seen-cut-card)))
                      (bj-edge "Bet"
                               #:dom idle #:cod betting)
                      (bj-edge "Wallet is empty"
@@ -147,6 +159,7 @@
                   (bj-state-shoe st)
                   (bj-state-discard st)
                   (bj-state-seen-cut-card? st)
+                  (bj-state-num-of-decks st)
                   '()
                   '()
                   bet
