@@ -465,6 +465,6 @@
    (if (unbox dot-mode)
        (write-dot graphs node-init)
        (let ([state-init (player 100)])
-         (let-values ([(_node-current _state-current history)
+         (let-values ([(_node-current _state-current journal)
                        (console-run graphs node-init state-init)])
-           (writeln (history->journal history)))))))
+           (writeln journal))))))
