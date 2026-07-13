@@ -105,6 +105,8 @@
   (define bj-edge (inst make-edge BJ-Type BJ-State))
   (define bj-bridge (inst make-bridge BJ-Type BJ-State))
   (define bj-graph (inst make-open-graph BJ-Type BJ-State))
+  (define entry-any-node (any-node player?))
+  (define bj-playing-any-node (any-node bj-playing?))
   (define bj-show (inst show BJ-State))
 
   (define hello (bj-node "Hello" #:type 'dealer))
@@ -134,11 +136,11 @@
                (list (bj-bridge "Input"
                                 #:mode 'auto
                                 #:dom betting
-                                #:cod (node->any-node playing-node bj-playing?)
+                                #:cod (bj-playing-any-node playing-node)
                                 #:trans to-playing)
                      (bj-bridge "Go to Lobby"
                                 #:dom idle
-                                #:cod (node->any-node entry-node player?)
+                                #:cod (entry-any-node entry-node)
                                 #:trans to-entry))))
    hello idle))
 
@@ -295,6 +297,7 @@
   (define bj-edge (inst make-edge BJ-Type BJ-Playing))
   (define bj-bridge (inst make-bridge BJ-Type BJ-Playing))
   (define bj-graph (inst make-open-graph BJ-Type BJ-Playing))
+  (define bj-any-node (any-node bj-state?))
   (define bj-show (inst show BJ-Playing))
 
   (define dealing-to-player (bj-node "Dealing a Card to Player" #:type 'dealer
@@ -381,22 +384,22 @@
                (list
                 (bj-bridge "Return"
                            #:dom blackjack-win
-                           #:cod (node->any-node return-node bj-state?)
+                           #:cod (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
                            #:dom player-win
-                           #:cod (node->any-node return-node bj-state?)
+                           #:cod (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
                            #:dom push
-                           #:cod (node->any-node return-node bj-state?)
+                           #:cod (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
                            #:dom dealer-win
-                           #:cod (node->any-node return-node bj-state?)
+                           #:cod (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return))))
    dealing-to-player))
@@ -409,20 +412,19 @@
     (bj-graph "Blackjack"))
   (define-values (gen-playing start)
     (bj-playing-graph "Playing"))
+  (define bj-any-graph (any-open-graph bj-state?))
+  (define bj-playing-any-graph (any-open-graph bj-playing?))
+  (define entry-any-graph (any-open-graph player?))
+  (define bj-any-node (any-node bj-state?))
+  (define bj-playing-any-node (any-node bj-playing?))
+  (define entry-node (any-node player?))
 
-  (values (list (open-graph->any-graph
-                 (gen-bj entry bj-state-player
-                         start place-bet)
-                 bj-state?)
-                (open-graph->any-graph
-                 (gen-playing idle identity)
-                 bj-playing?)
-                (open-graph->any-graph
-                 (gen-entry (list (list "Entry Blackjack"
-                                        (node->any-node hello bj-state?)
-                                        (lambda (pl) (make-bj-state pl n)))))
-                 player?))
-          (node->any-node entry player?)))
+  (values (list (bj-any-graph (gen-bj entry bj-state-player start place-bet))
+                (bj-playing-any-graph (gen-playing idle identity))
+                (entry-any-graph (gen-entry (list (list "Entry Blackjack"
+                                                        (bj-any-node hello)
+                                                        (lambda (pl) (make-bj-state pl n)))))))
+          (entry-node entry)))
 
 (: prompt-shuffle (All (A) (-> String (Listof A) (Listof A))))
 (define (prompt-shuffle title xs)
