@@ -22,7 +22,7 @@
   (define e-node ((inst node-maker Entry Player) g))
   (define e-edge (inst make-edge Entry Player))
   (define e-bridge (inst make-bridge Entry Player))
-  (define e-graph (inst make-graph Entry Player))
+  (define e-graph (inst make-open-graph Entry Player))
 
   (define entry (e-node "Entry" #:type 'entry #:trans show-wallet))
   (define terminal (e-node "Home" #:type 'entry))
@@ -104,7 +104,7 @@
   (define bj-node ((inst node-maker BJ-Type BJ-State) g))
   (define bj-edge (inst make-edge BJ-Type BJ-State))
   (define bj-bridge (inst make-bridge BJ-Type BJ-State))
-  (define bj-graph (inst make-graph BJ-Type BJ-State))
+  (define bj-graph (inst make-open-graph BJ-Type BJ-State))
   (define entry-any-node (any-node player?))
   (define bj-playing-any-node (any-node bj-playing?))
   (define bj-show (inst show BJ-State))
@@ -296,7 +296,7 @@
   (define bj-node ((inst node-maker BJ-Type BJ-Playing) g))
   (define bj-edge (inst make-edge BJ-Type BJ-Playing))
   (define bj-bridge (inst make-bridge BJ-Type BJ-Playing))
-  (define bj-graph (inst make-graph BJ-Type BJ-Playing))
+  (define bj-graph (inst make-open-graph BJ-Type BJ-Playing))
   (define bj-any-node (any-node bj-state?))
   (define bj-show (inst show BJ-Playing))
 
