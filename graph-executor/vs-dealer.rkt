@@ -464,6 +464,7 @@
    #:args ()
    (define-values (graphs node-init) (bj-wire (unbox num-of-decks)))
    (current-console-trace-display 'hide)
+   (current-console-undo-command #f)
    (if (unbox dot-mode)
        (write-dot graphs node-init)
        (let ([state-init (player 100)])
