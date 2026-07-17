@@ -15,7 +15,7 @@
 (define-type Entry (U 'entry 'terminal))
 
 (: entry-graph (-> String
-                   (Values (-> (Listof (List String AnyNode (-> Player Any)))
+                   (Values (-> (Listof (List String AnyNode (Code (-> Player Any))))
                                (OpenGraph Entry Player))
                            (Node Entry Player))))
 (define (entry-graph g)
@@ -24,13 +24,13 @@
   (define e-bridge (inst bridge Entry Player))
   (define e-graph (inst open-graph Entry Player))
 
-  (define entry (e-node "Entry" #:type 'entry #:trans show-wallet))
+  (define entry (e-node "Entry" #:type 'entry #:trans (code show-wallet)))
   (define terminal (e-node "Home" #:type 'entry))
   (values
    (lambda (outputs)
      (e-graph g
               #:edges (list (e-edge "Go to Home" #:dom entry #:cod terminal #:priority -1))
-              #:bridges (map (lambda ([output : (List String AnyNode (-> Player Any))])
+              #:bridges (map (lambda ([output : (List String AnyNode (Code (-> Player Any)))])
                                (e-bridge (first output)
                                          #:dom entry #:cod (second output)
                                          #:trans (third output)))
@@ -94,9 +94,9 @@
 
 (: bj-graph (-> String
                 (Values (-> (Node Entry Player)
-                            (-> BJ-State Player)
+                            (Code (-> BJ-State Player))
                             (Node BJ-Type BJ-Playing)
-                            (-> BJ-State BJ-Playing)
+                            (Code (-> BJ-State BJ-Playing))
                             (OpenGraph BJ-Type BJ-State))
                         (Node BJ-Type BJ-State)
                         (Node BJ-Type BJ-State))))
@@ -110,7 +110,7 @@
   (define bj-show (inst show BJ-State))
 
   (define hello (bj-node "Hello" #:type 'dealer))
-  (define idle (bj-node "Idle" #:type 'dealer #:trans show-player-wallet))
+  (define idle (bj-node "Idle" #:type 'dealer #:trans (code show-player-wallet)))
   (define betting (bj-node "Betting" #:type 'dealer))
 
   (values
@@ -118,20 +118,21 @@
      (bj-graph g
                #:edges
                (list (bj-edge "Initial Cut" #:dom hello #:cod idle #:mode 'auto
-                              #:trans (compose initial-cut-messsage reset-shoe))
+                              #:trans (code (compose initial-cut-messsage reset-shoe)))
                      (bj-edge "Cut"
                               #:dom idle #:cod idle #:mode 'auto
-                              #:when bj-state-seen-cut-card?
-                              #:trans (compose (bj-show "Dealer collected discards and shuffled the shoe.")
-                                               (compose reset-shoe reset-seen-cut-card)))
+                              #:when (code bj-state-seen-cut-card?)
+                              #:trans (code
+                                       (compose (bj-show "Dealer collected discards and shuffled the shoe.")
+                                                (compose reset-shoe reset-seen-cut-card))))
                      (bj-edge "Bet"
                               #:dom idle #:cod betting)
                      (bj-edge "Wallet is empty"
                               #:dom betting #:cod idle #:mode 'auto
                               #:priority +1
-                              #:when (compose zero?
-                                              (compose player-wallet bj-state-player))
-                              #:trans (bj-show "Your wallet is empty.")))
+                              #:when (code (compose zero?
+                                                    (compose player-wallet bj-state-player)))
+                              #:trans (code (bj-show "Your wallet is empty."))))
                #:bridges
                (list (bj-bridge "Input"
                                 #:mode 'auto
@@ -289,7 +290,7 @@
 
 (: bj-playing-graph (-> String
                         (Values (-> (Node BJ-Type BJ-State)
-                                    (-> BJ-Playing BJ-State)
+                                    (Code (-> BJ-Playing BJ-State))
                                     (OpenGraph BJ-Type BJ-Playing))
                                 (Node BJ-Type BJ-Playing))))
 (define (bj-playing-graph g)
@@ -301,17 +302,17 @@
   (define bj-show (inst show BJ-Playing))
 
   (define dealing-to-player (bj-node "Dealing a Card to Player" #:type 'dealer
-                                     #:trans (compose show-player-hand deal-to-player)))
+                                     #:trans (code (compose show-player-hand deal-to-player))))
   (define dealing-to-dealer (bj-node "Dealing a Card to Dealer" #:type 'dealer
-                                     #:trans (compose show-dealer-hand deal-to-dealer)))
+                                     #:trans (code (compose show-dealer-hand deal-to-dealer))))
   (define empty-shoe (bj-node "Dealer Misdeal" #:desc "(Empty Shoe)" #:type 'dealer))
   (define player-decision (bj-node "Hit or Stand (Player)" #:type 'player))
   (define dealer-decision (bj-node "Hit or Stand (Dealer)"  #:type 'dealer))
   (define judgement (bj-node "Judgement" #:type 'dealer))
-  (define player-win (bj-node "Player Win" #:type 'dealer #:trans result-win))
-  (define blackjack-win (bj-node "Blackjack Win" #:type 'dealer #:trans result-bj-win))
-  (define push (bj-node "Push" #:type 'dealer #:trans result-push))
-  (define dealer-win (bj-node "Dealer Win" #:type 'dealer #:trans result-lose))
+  (define player-win (bj-node "Player Win" #:type 'dealer #:trans (code result-win)))
+  (define blackjack-win (bj-node "Blackjack Win" #:type 'dealer #:trans (code result-bj-win)))
+  (define push (bj-node "Push" #:type 'dealer #:trans (code result-push)))
+  (define dealer-win (bj-node "Dealer Win" #:type 'dealer #:trans (code result-lose)))
 
   (values
    (lambda (return-node return)
@@ -320,29 +321,24 @@
                #:edges
                (list
                 (bj-edge "Dealing Fail"
-                         #:desc "when empty shoe"
                          #:priority +2
-                         #:when (compose empty? bj-state-shoe)
+                         #:when (code (compose empty? bj-state-shoe))
                          #:dom dealing-to-player #:cod empty-shoe #:mode 'auto)
                 (bj-edge "Dealing Fail"
-                         #:desc "when empty shoe"
                          #:priority +2
                          #:dom dealing-to-dealer #:cod empty-shoe #:mode 'auto
-                         #:when (compose empty? bj-state-shoe))
+                         #:when (code (compose empty? bj-state-shoe)))
                 (bj-edge "Player win!"
                          #:dom empty-shoe #:cod player-win #:mode 'auto)
                 (bj-edge "Deal a Card to dealer"
-                         #:desc "when (hand < 2)"
                          #:priority +1
                          #:dom dealing-to-player #:cod dealing-to-dealer #:mode 'auto
-                         #:when (compose (less-than? 2) player-hand-count))
+                         #:when (code (compose (less-than? 2) player-hand-count)))
                 (bj-edge "Deal a Card to player"
-                         #:desc "when (hand < 2)"
                          #:priority +1
                          #:dom dealing-to-dealer #:cod dealing-to-player #:mode 'auto
-                         #:when (compose (less-than? 2) dealer-hand-count))
+                         #:when (code (compose (less-than? 2) dealer-hand-count)))
                 (bj-edge "Return to dealer"
-                         #:desc "when dealer turn"
                          #:dom dealing-to-dealer #:cod dealer-decision #:mode 'auto)
                 (bj-edge "Return to player"
                          #:dom dealing-to-player #:cod player-decision #:mode 'auto)
@@ -352,34 +348,34 @@
                          #:dom player-decision #:cod dealer-decision)
                 (bj-edge "Bust"
                          #:dom player-decision #:cod dealer-win #:mode 'auto
-                         #:trans (bj-show "Bust!")
-                         #:when (compose bust? player-score))
+                         #:trans (code (bj-show "Bust!"))
+                         #:when (code (compose bust? player-score)))
                 (bj-edge "Blackjack"
                          #:dom player-decision #:cod dealer-decision #:mode 'auto
-                         #:trans (bj-show "Blackjack!")
-                         #:when (compose natural-blackjack? player-score))
+                         #:trans (code (bj-show "Blackjack!"))
+                         #:when (code (compose natural-blackjack? player-score)))
                 (bj-edge "Hit"
                          #:dom dealer-decision #:cod dealing-to-dealer #:mode 'auto
-                         #:when dealer-hit?)
+                         #:when (code dealer-hit?))
                 (bj-edge "Stand"
                          #:dom dealer-decision #:cod judgement #:mode 'auto
-                         #:when (negate dealer-hit?))
+                         #:when (code (negate dealer-hit?)))
                 (bj-edge "Bust"
                          #:dom dealer-decision #:cod player-win #:mode 'auto
-                         #:when (compose bust? dealer-score)
-                         #:trans (bj-show "Bust!"))
+                         #:when (code (compose bust? dealer-score))
+                         #:trans (code (bj-show "Bust!")))
                 (bj-edge "Blackjack Win!"
                          #:dom judgement #:cod blackjack-win #:mode 'auto
-                         #:when (compose bj-win? bj-judge))
+                         #:when (code (compose bj-win? bj-judge)))
                 (bj-edge "Player win!"
                          #:dom judgement #:cod player-win #:mode 'auto
-                         #:when (compose win? bj-judge))
+                         #:when (code (compose win? bj-judge)))
                 (bj-edge "Push!"
                          #:dom judgement #:cod push #:mode 'auto
-                         #:when (compose push? bj-judge))
+                         #:when (code (compose push? bj-judge)))
                 (bj-edge "Dealer Win!"
                          #:dom judgement #:cod dealer-win #:mode 'auto
-                         #:when (compose lose? bj-judge)))
+                         #:when (code (compose lose? bj-judge))))
                #:bridges
                (list
                 (bj-bridge "Return"
@@ -419,11 +415,13 @@
   (define bj-playing-any-node (any-node bj-playing?))
   (define entry-node (any-node player?))
 
-  (values (list (bj-any-graph (gen-bj entry bj-state-player start place-bet))
-                (bj-playing-any-graph (gen-playing idle identity))
+  (values (list (bj-any-graph (gen-bj entry (code bj-state-player) start (code place-bet)))
+                (bj-playing-any-graph (gen-playing idle (code identity)))
                 (entry-any-graph (gen-entry (list (list "Entry Blackjack"
                                                         (bj-any-node hello)
-                                                        (lambda (pl) (make-bj-state pl n)))))))
+                                                        (code
+                                                         (lambda ([pl : Player])
+                                                           (make-bj-state pl n))))))))
           (entry-node entry)))
 
 (: prompt-shuffle (All (A) (-> String (Listof A) (Listof A))))
