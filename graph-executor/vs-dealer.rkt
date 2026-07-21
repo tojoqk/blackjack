@@ -439,11 +439,35 @@
           (let ([val (pop-at! (prompt title `(random ,len)) len)])
             (cons val (shuf (sub1 len))))))))
 
+
+(define state-init (player 100))
+
+(module+ console
+  (require typed/racket/draw typed/pict)
+  (provide make-system)
+  (: make-system (->* () (Positive-Integer)
+                      (Values (->* () (Journal) Journal)
+                              (->* () (Journal) pict))))
+  (define (make-system [n 4])
+    (define-values (graphs node-init) (bj-wire n))
+    (: render  (->* () (Journal) pict))
+    (define (render [j '()])
+      (let-values ([(_node _state h) (replay graphs node-init state-init j)])
+        (scale (bitmap (render-dot graphs node-init #:history h)) 0.5)))
+    (: run (->* () (Journal) Journal))
+    (define (run [j '()])
+      (parameterize ([current-console-print-commands (list (list 'r "Render Graph" render))]
+                     [current-console-trace-display 'hide]
+                     [current-console-undo-command #f])
+        (let-values ([(_node _state j-result)
+                      (console-run graphs node-init state-init #:journal j)])
+          j-result)))
+    (values run render)))
+
 (module+ main
-  (require graph-executor
-           racket/cmdline)
-  (: dot-mode (Boxof Boolean))
-  (define dot-mode (box #f))
+  (require racket/cmdline)
+  (: mode (Boxof (U 'dot 'console)))
+  (define mode (box 'dot))
   (: num-of-decks (Boxof Positive-Integer))
   (define num-of-decks (box 4))
   (: any->positive (-> Any Positive-Integer))
@@ -454,18 +478,22 @@
                     x
                     (error '--num-of-decks "must be exact positive integer (~a)" x)))]
           [else (error '--num-of-decks "must be exact positive integer (~a)" x)]))
+  (define program-name "vs-dealer")
   (command-line
-   #:program "graph-example"
+   #:program program-name
    #:once-each
    [("--num-of-decks") n "Number of decks" (set-box! num-of-decks (any->positive n))]
-   [("--dot") "Generate dot" (set-box! dot-mode #t)]
+   #:once-any
+   [("--dot") "Generate dot" (set-box! mode 'dot)]
+   [("--console") "Run console" (set-box! mode 'console)]
    #:args ()
    (define-values (graphs node-init) (bj-wire (unbox num-of-decks)))
    (current-console-trace-display 'hide)
    (current-console-undo-command #f)
-   (if (unbox dot-mode)
-       (write-dot graphs node-init)
-       (let ([state-init (player 100)])
-         (let-values ([(_node-current _state-current journal)
-                       (console-run graphs node-init state-init)])
-           (writeln journal))))))
+   (case (unbox mode)
+     [(dot) (write-dot graphs node-init)]
+     [(console)
+      (let ([state-init (player 100)])
+        (let-values ([(_node-current _state-current journal)
+                      (console-run graphs node-init state-init)])
+          (writeln journal)))])))
