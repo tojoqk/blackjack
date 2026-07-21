@@ -439,33 +439,36 @@
           (let ([val (pop-at! (prompt title `(random ,len)) len)])
             (cons val (shuf (sub1 len))))))))
 
-
-(define state-init (player 100))
-
 (module+ console
-  (require typed/racket/draw typed/pict)
+  (require typed/racket/gui typed/pict)
   (provide make-system)
+  (define state-init (player 100))
   (: make-system (->* () (Positive-Integer)
                       (Values (->* () (Journal) Journal)
-                              (->* () (Journal) pict))))
+                              (->* () (Journal) (-> Output-Port Void)))))
   (define (make-system [n 4])
     (define-values (graphs node-init) (bj-wire n))
-    (: render  (->* () (Journal) pict))
-    (define (render [j '()])
+    (: writer  (->* () (Journal) (-> Output-Port Void)))
+    (define (writer [j '()])
       (let-values ([(_node _state h) (replay graphs node-init state-init j)])
-        (scale (bitmap (render-dot graphs node-init #:history h)) 0.5)))
+        (dot-writer graphs node-init #:history h)))
+    (: show (-> Journal Void))
+    (define (show j)
+      (show-pict (scale (dot-writer->pict (writer j)) 0.5)
+                 #:frame-style '() #:frame-x 0 #:frame-y 0))
     (: run (->* () (Journal) Journal))
     (define (run [j '()])
-      (parameterize ([current-console-print-commands (list (list 'r "Render Graph" render))]
+      (parameterize ([current-console-commands (list (list 'action 'r "Render Graph" show)
+                                                     (list 'quit 'q "Quit"))]
                      [current-console-trace-display 'hide]
-                     [current-console-undo-command #f])
+                     [current-eventspace (make-eventspace)])
         (let-values ([(_node _state j-result)
                       (console-run graphs node-init state-init #:journal j)])
           j-result)))
-    (values run render)))
+    (values run writer)))
 
 (module+ main
-  (require racket/cmdline)
+  (require racket/cmdline (submod ".." console))
   (: mode (Boxof (U 'dot 'console)))
   (define mode (box 'dot))
   (: num-of-decks (Boxof Positive-Integer))
@@ -487,13 +490,7 @@
    [("--dot") "Generate dot" (set-box! mode 'dot)]
    [("--console") "Run console" (set-box! mode 'console)]
    #:args ()
-   (define-values (graphs node-init) (bj-wire (unbox num-of-decks)))
-   (current-console-trace-display 'hide)
-   (current-console-undo-command #f)
+   (define-values (run writer) (make-system (unbox num-of-decks)))
    (case (unbox mode)
-     [(dot) (write-dot graphs node-init)]
-     [(console)
-      (let ([state-init (player 100)])
-        (let-values ([(_node-current _state-current journal)
-                      (console-run graphs node-init state-init)])
-          (writeln journal)))])))
+     [(dot) ((writer) (current-output-port))]
+     [(console) (writeln (run))])))
