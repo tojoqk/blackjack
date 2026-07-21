@@ -1,6 +1,6 @@
 #lang info
 (define collection "blackjack")
-(define deps '("base" "typed-racket-lib" "2d-lib" "https://github.com/tojoqk/graph-executor.git"))
+(define deps '("base" "typed-racket-lib" "2d-lib" "typed-racket-more" "https://github.com/tojoqk/graph-executor.git"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib" "rackunit-typed"))
 (define scribblings '(("scribblings/blackjack.scrbl" ())))
 (define pkg-desc "Typed BlackJack")
