@@ -29,10 +29,10 @@
   (values
    (lambda (outputs)
      (e-graph g
-              #:edges (list (e-edge "Go to Home" #:dom entry #:cod terminal #:priority -1))
+              #:edges (list (e-edge "Go to Home" #:from entry #:to terminal #:priority -1))
               #:bridges (map (lambda ([output : (List String AnyNode (Code (-> Player Any)))])
                                (e-bridge (first output)
-                                         #:dom entry #:cod (second output)
+                                         #:from entry #:to (second output)
                                          #:trans (third output)))
                              outputs)))
    entry))
@@ -117,18 +117,18 @@
    (lambda (entry-node to-entry playing-node to-playing)
      (bj-graph g
                #:edges
-               (list (bj-edge "Initial Cut" #:dom hello #:cod idle #:mode 'auto
+               (list (bj-edge "Initial Cut" #:from hello #:to idle #:mode 'auto
                               #:trans (code (compose initial-cut-messsage reset-shoe)))
                      (bj-edge "Cut"
-                              #:dom idle #:cod idle #:mode 'auto
+                              #:from idle #:to idle #:mode 'auto
                               #:when (code bj-state-seen-cut-card?)
                               #:trans (code
                                        (compose (bj-show "Dealer collected discards and shuffled the shoe.")
                                                 (compose reset-shoe reset-seen-cut-card))))
                      (bj-edge "Bet"
-                              #:dom idle #:cod betting)
+                              #:from idle #:to betting)
                      (bj-edge "Wallet is empty"
-                              #:dom betting #:cod idle #:mode 'auto
+                              #:from betting #:to idle #:mode 'auto
                               #:priority +1
                               #:when (code (compose zero?
                                                     (compose player-wallet bj-state-player)))
@@ -136,12 +136,12 @@
                #:bridges
                (list (bj-bridge "Input"
                                 #:mode 'auto
-                                #:dom betting
-                                #:cod (bj-playing-any-node playing-node)
+                                #:from betting
+                                #:to (bj-playing-any-node playing-node)
                                 #:trans to-playing)
                      (bj-bridge "Go to Lobby"
-                                #:dom idle
-                                #:cod (entry-any-node entry-node)
+                                #:from idle
+                                #:to (entry-any-node entry-node)
                                 #:trans to-entry))))
    hello idle))
 
@@ -323,79 +323,79 @@
                 (bj-edge "Dealing Fail"
                          #:priority +2
                          #:when (code (compose empty? bj-state-shoe))
-                         #:dom dealing-to-player #:cod empty-shoe #:mode 'auto)
+                         #:from dealing-to-player #:to empty-shoe #:mode 'auto)
                 (bj-edge "Dealing Fail"
                          #:priority +2
-                         #:dom dealing-to-dealer #:cod empty-shoe #:mode 'auto
+                         #:from dealing-to-dealer #:to empty-shoe #:mode 'auto
                          #:when (code (compose empty? bj-state-shoe)))
                 (bj-edge "Player win!"
-                         #:dom empty-shoe #:cod player-win #:mode 'auto)
+                         #:from empty-shoe #:to player-win #:mode 'auto)
                 (bj-edge "Deal a Card to dealer"
                          #:priority +1
-                         #:dom dealing-to-player #:cod dealing-to-dealer #:mode 'auto
+                         #:from dealing-to-player #:to dealing-to-dealer #:mode 'auto
                          #:when (code (compose (less-than? 2) player-hand-count)))
                 (bj-edge "Deal a Card to player"
                          #:priority +1
-                         #:dom dealing-to-dealer #:cod dealing-to-player #:mode 'auto
+                         #:from dealing-to-dealer #:to dealing-to-player #:mode 'auto
                          #:when (code (compose (less-than? 2) dealer-hand-count)))
                 (bj-edge "Return to dealer"
-                         #:dom dealing-to-dealer #:cod dealer-decision #:mode 'auto)
+                         #:from dealing-to-dealer #:to dealer-decision #:mode 'auto)
                 (bj-edge "Return to player"
-                         #:dom dealing-to-player #:cod player-decision #:mode 'auto)
+                         #:from dealing-to-player #:to player-decision #:mode 'auto)
                 (bj-edge "Hit"
-                         #:dom player-decision #:cod dealing-to-player)
+                         #:from player-decision #:to dealing-to-player)
                 (bj-edge "Stand"
-                         #:dom player-decision #:cod dealer-decision)
+                         #:from player-decision #:to dealer-decision)
                 (bj-edge "Bust"
-                         #:dom player-decision #:cod dealer-win #:mode 'auto
+                         #:from player-decision #:to dealer-win #:mode 'auto
                          #:trans (code (bj-show "Bust!"))
                          #:when (code (compose bust? player-score)))
                 (bj-edge "Blackjack"
-                         #:dom player-decision #:cod dealer-decision #:mode 'auto
+                         #:from player-decision #:to dealer-decision #:mode 'auto
                          #:trans (code (bj-show "Blackjack!"))
                          #:when (code (compose natural-blackjack? player-score)))
                 (bj-edge "Hit"
-                         #:dom dealer-decision #:cod dealing-to-dealer #:mode 'auto
+                         #:from dealer-decision #:to dealing-to-dealer #:mode 'auto
                          #:when (code dealer-hit?))
                 (bj-edge "Stand"
-                         #:dom dealer-decision #:cod judgement #:mode 'auto
+                         #:from dealer-decision #:to judgement #:mode 'auto
                          #:when (code (negate dealer-hit?)))
                 (bj-edge "Bust"
-                         #:dom dealer-decision #:cod player-win #:mode 'auto
+                         #:from dealer-decision #:to player-win #:mode 'auto
                          #:when (code (compose bust? dealer-score))
                          #:trans (code (bj-show "Bust!")))
                 (bj-edge "Blackjack Win!"
-                         #:dom judgement #:cod blackjack-win #:mode 'auto
+                         #:from judgement #:to blackjack-win #:mode 'auto
                          #:when (code (compose bj-win? bj-judge)))
                 (bj-edge "Player win!"
-                         #:dom judgement #:cod player-win #:mode 'auto
+                         #:from judgement #:to player-win #:mode 'auto
                          #:when (code (compose win? bj-judge)))
                 (bj-edge "Push!"
-                         #:dom judgement #:cod push #:mode 'auto
+                         #:from judgement #:to push #:mode 'auto
                          #:when (code (compose push? bj-judge)))
                 (bj-edge "Dealer Win!"
-                         #:dom judgement #:cod dealer-win #:mode 'auto
+                         #:from judgement #:to dealer-win #:mode 'auto
                          #:when (code (compose lose? bj-judge))))
                #:bridges
                (list
                 (bj-bridge "Return"
-                           #:dom blackjack-win
-                           #:cod (bj-any-node return-node)
+                           #:from blackjack-win
+                           #:to (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
-                           #:dom player-win
-                           #:cod (bj-any-node return-node)
+                           #:from player-win
+                           #:to (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
-                           #:dom push
-                           #:cod (bj-any-node return-node)
+                           #:from push
+                           #:to (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return)
                 (bj-bridge "Return"
-                           #:dom dealer-win
-                           #:cod (bj-any-node return-node)
+                           #:from dealer-win
+                           #:to (bj-any-node return-node)
                            #:mode 'auto
                            #:trans return))))
    dealing-to-player))
