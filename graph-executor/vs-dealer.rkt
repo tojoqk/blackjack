@@ -444,13 +444,13 @@
   (define state-init (player 100))
   (: make-system (->* () (Positive-Integer)
                       (Values (->* () (Journal) Journal)
-                              (->* () (Journal) DotWriter))))
+                              (->* () (Journal) DotRenderer))))
   (define (make-system [n 4])
     (define-values (graphs node-init) (bj-wire n))
-    (: writer  (->* () (Journal) DotWriter))
-    (define (writer [j '()])
+    (: renderer  (->* () (Journal) DotRenderer))
+    (define (renderer [j '()])
       (let-values ([(_node _state h) (replay graphs node-init state-init j)])
-        (dot-writer graphs node-init #:history h)))
+        (dot-renderer graphs node-init #:history h)))
     (: run (->* () (Journal) Journal))
     (define (run [j '()])
       (parameterize ([current-console-commands (list (list 'quit 'q "Quit"))]
@@ -458,7 +458,7 @@
         (let-values ([(_node _state j-result)
                       (console-run graphs node-init state-init #:journal j)])
           j-result)))
-    (values run writer)))
+    (values run renderer)))
 
 (module+ main
   (require racket/cmdline (submod ".." console))
@@ -483,7 +483,7 @@
    [("--dot") "Generate dot" (set-box! mode 'dot)]
    [("--console") "Run console" (set-box! mode 'console)]
    #:args ()
-   (define-values (run writer) (make-system (unbox num-of-decks)))
+   (define-values (run renderer) (make-system (unbox num-of-decks)))
    (case (unbox mode)
-     [(dot) (write-dot (writer))]
+     [(dot) (render-dot (renderer))]
      [(console) (writeln (run))])))
