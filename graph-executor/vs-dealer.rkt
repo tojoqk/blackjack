@@ -455,9 +455,7 @@
     (define (run [j '()])
       (parameterize ([current-console-commands (list (list 'quit 'q "Quit"))]
                      [current-console-trace-display 'hide])
-        (let-values ([(_node _state j-result)
-                      (console-run graphs node-init state-init #:journal j)])
-          j-result)))
+        (console-run graphs node-init state-init #:journal j)))
     (values run renderer)))
 
 (module+ main
