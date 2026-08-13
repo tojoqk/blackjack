@@ -19,7 +19,7 @@
                                (OpenGraph Player))
                            (Node Player))))
 (define (entry-graph g)
-  (define e-node ((inst node Player Entry) g))
+  (define e-node (inst (node g) Player Entry))
   (define e-edge (inst edge Player))
   (define e-bridge (inst bridge Player))
   (define e-graph (inst open-graph Player))
@@ -101,7 +101,7 @@
                         (Node BJ-State)
                         (Node BJ-State))))
 (define (bj-graph g)
-  (define bj-node ((inst node BJ-State BJ-Type) g))
+  (define bj-node (inst (node g) BJ-State BJ-Type))
   (define bj-edge (inst edge BJ-State))
   (define bj-bridge (inst bridge BJ-State))
   (define bj-graph (inst open-graph BJ-State))
@@ -294,7 +294,7 @@
                                     (OpenGraph BJ-Playing))
                                 (Node BJ-Playing))))
 (define (bj-playing-graph g)
-  (define bj-node ((inst node BJ-Playing BJ-Type) g))
+  (define bj-node (inst (node g) BJ-Playing BJ-Type))
   (define bj-edge (inst edge BJ-Playing))
   (define bj-bridge (inst bridge BJ-Playing))
   (define bj-graph (inst open-graph BJ-Playing))
@@ -439,27 +439,15 @@
           (let ([val (pop-at! (prompt title `(random ,len)) len)])
             (cons val (shuf (sub1 len))))))))
 
-(module+ console
-  (provide make-system)
-  (define state-init (player 100))
-  (: make-system (->* () (Positive-Integer)
-                      (Values (->* () (Journal) Journal)
-                              (->* () (Journal) DotRenderer))))
-  (define (make-system [n 4])
+(module+ model
+  (provide make-model)
+  (: make-model (->* () (Positive-Integer) (Model Any)))
+  (define (make-model [n 4])
     (define-values (graphs node-init) (bj-wire n))
-    (: renderer  (->* () (Journal) DotRenderer))
-    (define (renderer [j '()])
-      (let-values ([(_node _state h) (replay graphs node-init state-init j)])
-        (dot-renderer graphs node-init #:history h)))
-    (: run (->* () (Journal) Journal))
-    (define (run [j '()])
-      (parameterize ([current-console-commands (list (list 'quit 'q "Quit"))]
-                     [current-console-trace-display 'hide])
-        (console-run graphs node-init state-init #:journal j)))
-    (values run renderer)))
+    (model graphs node-init (player 100))))
 
 (module+ main
-  (require racket/cmdline (submod ".." console))
+  (require racket/cmdline (submod ".." model))
   (: mode (Boxof (U 'dot 'console)))
   (define mode (box 'dot))
   (: num-of-decks (Boxof Positive-Integer))
@@ -481,7 +469,10 @@
    [("--dot") "Generate dot" (set-box! mode 'dot)]
    [("--console") "Run console" (set-box! mode 'console)]
    #:args ()
-   (define-values (run renderer) (make-system (unbox num-of-decks)))
+   (define m (make-model (unbox num-of-decks)))
    (case (unbox mode)
-     [(dot) (render-dot (renderer))]
-     [(console) (writeln (run))])))
+     [(dot) (render-dot (dot-renderer m))]
+     [(console) (writeln
+                 (parameterize ([current-console-commands (list (list 'quit 'q "Quit"))]
+                                [current-console-trace-display 'hide])
+                   (console-run m)))])))
