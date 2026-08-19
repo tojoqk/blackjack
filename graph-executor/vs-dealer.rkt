@@ -443,8 +443,10 @@
   (provide make-model)
   (: make-model (->* () (Positive-Integer) (Model Any)))
   (define (make-model [n 4])
-    (define-values (graphs node-init) (bj-wire n))
-    (model graphs node-init (player 100))))
+    (model
+     (thunk
+      (define-values (graphs node-init) (bj-wire n))
+      (values graphs node-init (player 100))))))
 
 (module+ main
   (require racket/cmdline (submod ".." model))
