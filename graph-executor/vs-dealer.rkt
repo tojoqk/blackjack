@@ -15,14 +15,14 @@
 (define-type Entry (U 'entry 'terminal))
 
 (: entry-graph (-> String
-                   (Values (-> (Listof (List String AnyNode (Code (-> Player Any))))
+                   (Values (-> (Listof (List String (Node Any) (Code (-> Player Any))))
                                (OpenGraph Player))
                            (Node Player))))
 (define (entry-graph g)
-  (define e-node (inst (node g) Player Entry))
-  (define e-edge (inst edge Player))
-  (define e-bridge (inst bridge Player))
-  (define e-graph (inst open-graph Player))
+  (define e-node (inst (node-maker g) Player Entry))
+  (define e-edge (inst make-edge Player))
+  (define e-bridge (inst make-bridge Player))
+  (define e-graph (inst make-open-graph Player))
 
   (define entry (e-node "Entry" #:type 'entry #:trans (code show-wallet)))
   (define terminal (e-node "Home" #:type 'entry))
@@ -30,7 +30,7 @@
    (lambda (outputs)
      (e-graph g
               #:edges (list (e-edge "Go to Home" #:from entry #:to terminal #:priority -1))
-              #:bridges (map (lambda ([output : (List String AnyNode (Code (-> Player Any)))])
+              #:bridges (map (lambda ([output : (List String (Node Any) (Code (-> Player Any)))])
                                (e-bridge (first output)
                                          #:from entry #:to (second output)
                                          #:trans (third output)))
@@ -101,10 +101,10 @@
                         (Node BJ-State)
                         (Node BJ-State))))
 (define (bj-graph g)
-  (define bj-node (inst (node g) BJ-State BJ-Type))
-  (define bj-edge (inst edge BJ-State))
-  (define bj-bridge (inst bridge BJ-State))
-  (define bj-graph (inst open-graph BJ-State))
+  (define bj-node (inst (node-maker g) BJ-State BJ-Type))
+  (define bj-edge (inst make-edge BJ-State))
+  (define bj-bridge (inst make-bridge BJ-State))
+  (define bj-graph (inst make-open-graph BJ-State))
   (define entry-any-node (any-node player?))
   (define bj-playing-any-node (any-node bj-playing?))
   (define bj-show (inst show BJ-State))
@@ -156,7 +156,7 @@
 (define (place-bet st)
   (let ([w (player-wallet (bj-state-player st))])
     (assert w positive-integer?)
-    (let ([bet (prompt "Place your bet." `(range 1 ,w))])
+    (let ([bet (prompt "Place your bet." (op-between 1 w))])
       (bj-playing (struct-copy player (bj-state-player st)
                                [wallet (assert (- w bet) natural?)])
                   (bj-state-shoe st)
@@ -294,10 +294,10 @@
                                     (OpenGraph BJ-Playing))
                                 (Node BJ-Playing))))
 (define (bj-playing-graph g)
-  (define bj-node (inst (node g) BJ-Playing BJ-Type))
-  (define bj-edge (inst edge BJ-Playing))
-  (define bj-bridge (inst bridge BJ-Playing))
-  (define bj-graph (inst open-graph BJ-Playing))
+  (define bj-node (inst (node-maker g) BJ-Playing BJ-Type))
+  (define bj-edge (inst make-edge BJ-Playing))
+  (define bj-bridge (inst make-bridge BJ-Playing))
+  (define bj-graph (inst make-open-graph BJ-Playing))
   (define bj-any-node (any-node bj-state?))
   (define bj-show (inst show BJ-Playing))
 
@@ -400,7 +400,7 @@
                            #:trans return))))
    dealing-to-player))
 
-(: bj-wire (-> Positive-Integer (Values (Listof AnyGraph) AnyNode)))
+(: bj-wire (-> Positive-Integer (Values (Listof (Graph Any)) (Node Any))))
 (define (bj-wire n)
   (define-values (gen-entry entry)
     (entry-graph "Lobby"))
@@ -436,7 +436,7 @@
     (let shuf ([len : Natural (vector-length v)])
       (if (zero? len)
           '()
-          (let ([val (pop-at! (prompt title `(random ,len)) len)])
+          (let ([val (pop-at! (prompt title (op-random len)) len)])
             (cons val (shuf (sub1 len))))))))
 
 (module+ model
@@ -473,8 +473,8 @@
    #:args ()
    (define m (make-model (unbox num-of-decks)))
    (case (unbox mode)
-     [(dot) (render-dot (dot-renderer m))]
+     [(dot) (render-dot m)]
      [(console) (writeln
-                 (parameterize ([current-console-commands (list (list 'quit 'q "Quit"))]
-                                [current-console-trace-display 'hide])
-                   (console-run m)))])))
+                 (console-run m
+                              #:config (console-config #:commands (list (quit-console-command 'q "Quit"))
+                                                       #:trace-display 'hide)))])))
