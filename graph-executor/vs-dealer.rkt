@@ -349,7 +349,8 @@
                 (bj-edge "Bust"
                          #:from player-decision #:to dealer-win #:mode 'auto
                          #:trans (code (bj-show "Bust!"))
-                         #:when (code (compose bust? player-score)))
+                         #:when (code (compose bust? player-score))
+                         #:priority +1)
                 (bj-edge "Blackjack"
                          #:from player-decision #:to dealer-decision #:mode 'auto
                          #:trans (code (bj-show "Blackjack!"))
@@ -363,7 +364,8 @@
                 (bj-edge "Bust"
                          #:from dealer-decision #:to player-win #:mode 'auto
                          #:when (code (compose bust? dealer-score))
-                         #:trans (code (bj-show "Bust!")))
+                         #:trans (code (bj-show "Bust!"))
+                         #:priority +1)
                 (bj-edge "Blackjack Win!"
                          #:from judgement #:to blackjack-win #:mode 'auto
                          #:when (code (compose bj-win? bj-judge)))
