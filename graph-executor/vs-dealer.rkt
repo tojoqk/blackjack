@@ -288,13 +288,13 @@
       [(bust? s) #f]
       [else (< s 17)])))
 
-(: bj-playing-graph (-> String
+(: bj-playing-graph (-> String String
                         (Values (-> (Node BJ-State)
                                     (Code (-> BJ-Playing BJ-State))
                                     (OpenGraph BJ-Playing))
                                 (Node BJ-Playing))))
-(define (bj-playing-graph g)
-  (define-values (make-node make-open-graph) (open-graph-maker g))
+(define (bj-playing-graph g parent-name)
+  (define-values (make-node make-open-graph) (open-graph-maker g #:parent-name parent-name))
   (define bj-node (inst make-node BJ-Playing BJ-Type))
   (define bj-edge (inst make-edge BJ-Playing))
   (define bj-bridge (inst make-bridge BJ-Playing))
@@ -317,8 +317,7 @@
 
   (values
    (lambda (return-node return)
-     (bj-graph #:parent-name (node-graph-name return-node)
-               #:edges
+     (bj-graph #:edges
                (list
                 (bj-edge "Dealing Fail"
                          #:priority +2
@@ -409,7 +408,7 @@
   (define-values (gen-bj hello idle)
     (bj-graph "Blackjack"))
   (define-values (gen-playing start)
-    (bj-playing-graph "Playing"))
+    (bj-playing-graph "Playing" "Blackjack"))
   (define bj-any-graph (any-graph bj-state?))
   (define bj-playing-any-graph (any-graph bj-playing?))
   (define entry-any-graph (any-graph player?))
