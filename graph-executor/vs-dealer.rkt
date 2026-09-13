@@ -19,7 +19,8 @@
                                (OpenGraph Player))
                            (Node Player))))
 (define (entry-graph g)
-  (define e-node (inst (node-maker g) Player Entry))
+  (define-values (make-node make-open-graph) (open-graph-maker g))
+  (define e-node (inst make-node Player Entry))
   (define e-edge (inst make-edge Player))
   (define e-bridge (inst make-bridge Player))
   (define e-graph (inst make-open-graph Player))
@@ -28,8 +29,7 @@
   (define terminal (e-node "Home" #:type 'entry))
   (values
    (lambda (outputs)
-     (e-graph g
-              #:edges (list (e-edge "Go to Home" #:from entry #:to terminal #:priority -1))
+     (e-graph #:edges (list (e-edge "Go to Home" #:from entry #:to terminal #:priority -1))
               #:bridges (map (lambda ([output : (List String (Node Any) (Code (-> Player Any)))])
                                (e-bridge (first output)
                                          #:from entry #:to (second output)
@@ -101,7 +101,8 @@
                         (Node BJ-State)
                         (Node BJ-State))))
 (define (bj-graph g)
-  (define bj-node (inst (node-maker g) BJ-State BJ-Type))
+  (define-values (make-node make-open-graph) (open-graph-maker g))
+  (define bj-node (inst make-node BJ-State BJ-Type))
   (define bj-edge (inst make-edge BJ-State))
   (define bj-bridge (inst make-bridge BJ-State))
   (define bj-graph (inst make-open-graph BJ-State))
@@ -115,8 +116,7 @@
 
   (values
    (lambda (entry-node to-entry playing-node to-playing)
-     (bj-graph g
-               #:edges
+     (bj-graph #:edges
                (list (bj-edge "Initial Cut" #:from hello #:to idle #:mode 'auto
                               #:trans (code (compose initial-cut-messsage reset-shoe)))
                      (bj-edge "Cut"
@@ -294,7 +294,8 @@
                                     (OpenGraph BJ-Playing))
                                 (Node BJ-Playing))))
 (define (bj-playing-graph g)
-  (define bj-node (inst (node-maker g) BJ-Playing BJ-Type))
+  (define-values (make-node make-open-graph) (open-graph-maker g))
+  (define bj-node (inst make-node BJ-Playing BJ-Type))
   (define bj-edge (inst make-edge BJ-Playing))
   (define bj-bridge (inst make-bridge BJ-Playing))
   (define bj-graph (inst make-open-graph BJ-Playing))
@@ -316,8 +317,7 @@
 
   (values
    (lambda (return-node return)
-     (bj-graph g
-               #:parent-name (node-graph-name return-node)
+     (bj-graph #:parent-name (node-graph-name return-node)
                #:edges
                (list
                 (bj-edge "Dealing Fail"
