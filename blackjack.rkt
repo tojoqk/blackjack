@@ -1,19 +1,14 @@
 #lang 2d typed/racket
 (require 2d/cond)
-(provide Suit suit?
-         Rank rank?
-         Card card card? card-suit card-rank
-         ranks cards
+(provide Rank rank?
+         all-ranks
          Score natural-blackjack? bust?
-         ranks->score cards->score
+         ranks->score
          Judgement bj-win? win? lose? push?
          judge)
 
 (module+ test
   (require typed/rackunit))
-
-(define-type Suit (U 'Spade 'Club 'Heart 'Diamond))
-(define-predicate suit? Suit)
 
 (define-type Rank (U 'Ace 2 3 4 5 6 7 8 9 10 'Jack 'Queen 'King))
 (define-predicate rank? Rank)
@@ -21,38 +16,13 @@
 (define-predicate rank-face? (U 'Jack 'Queen 'King))
 (define-predicate rank-ace? 'Ace)
 
-(struct card ([suit : Suit] [rank : Rank])
-  #:transparent
-  #:type-name Card)
-
-(: suits (Listof Suit))
-(define suits '(Spade Club Heart Diamond))
-
-(: ranks (Listof Rank))
-(define ranks '(Ace 2 3 4 5 6 7 8 9 10 Jack Queen King))
+(: all-ranks (Listof Rank))
+(define all-ranks '(Ace 2 3 4 5 6 7 8 9 10 Jack Queen King))
 
 (module+ test
-  (check-eqv? (count rank-number? ranks) 9)
-  (check-eqv? (count rank-face? ranks) 3)
-  (check-eqv? (count rank-ace? ranks) 1))
-
-(: product (All (A B C) (-> (-> A B C) (Listof A) (Listof B) (Listof C))))
-(define (product f xs ys)
-  (for*/list : (Listof C) ([x : A xs]
-                           [y : B ys])
-    (f x y)))
-
-(module+ test
-  (check-equal? (product (inst cons Natural Symbol)
-                         '(1 2 3)
-                         '(a b c))
-                (list '(1 . a) '(1 . b) '(1 . c)
-                      '(2 . a) '(2 . b) '(2 . c)
-                      '(3 . a) '(3 . b) '(3 . c))))
-
-(: cards (Listof Card))
-(define cards
-  (product card suits ranks))
+  (check-eqv? (count rank-number? all-ranks) 9)
+  (check-eqv? (count rank-face? all-ranks) 3)
+  (check-eqv? (count rank-ace? all-ranks) 1))
 
 (define-type Score (U Natural 'Natural-Blackjack 'Bust))
 (define-predicate natural-blackjack? 'Natural-Blackjack)
@@ -74,21 +44,12 @@
           [(< 21 score*) 'Bust]
           [else score*])))
 
-(: cards->score (-> (Listof Card) Score))
-(define (cards->score cs)
-  (ranks->score (map card-rank cs)))
-
 (module+ test
-  (check-eqv? (cards->score (list (card 'Spade 'Jack)
-                                  (card 'Spade 'Ace)))
+  (check-eqv? (ranks->score (list 'Jack 'Ace))
               'Natural-Blackjack)
-  (check-eqv? (cards->score (list (card 'Spade 'Jack)
-                                  (card 'Spade 10)
-                                  (card 'Spade 2)))
+  (check-eqv? (ranks->score (list 'Jack 10 2))
               'Bust)
-  (check-eqv? (cards->score (list (card 'Spade 'Jack)
-                                  (card 'Spade 'Queen)
-                                  (card 'Spade 'Ace)))
+  (check-eqv? (ranks->score (list 'Jack 'Queen 'Ace))
               21))
 
 (define-type Judgement (U 'BJ-Win 'Win 'Lose 'Push))
