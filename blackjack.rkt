@@ -28,8 +28,8 @@
 (define-predicate natural-blackjack? 'Natural-Blackjack)
 (define-predicate bust? 'Bust)
 
-(: ranks->score (-> (Listof Rank) Score))
-(define (ranks->score rs)
+(: ranks->score (-> (Listof Rank) [#:split? Boolean ] Score))
+(define (ranks->score rs #:split? [split? #f])
   (: ranks->score* (-> (Listof Rank) Natural))
   (define (ranks->score* rs)
     (let ([score-without-aces (+ (foldl + 0 (filter rank-number? rs))
@@ -40,13 +40,15 @@
               [(<= (+ score* (* ace-count 11)) 21) (+ score* (* ace-count 11))]
               [else (add-ace-scores (+ score* 1) (- ace-count 1))]))))
   (let ([score* (ranks->score* rs)])
-    (cond [(and (= (length rs) 2) (= score* 21)) 'Natural-Blackjack]
+    (cond [(and (not split?) (= (length rs) 2) (= score* 21)) 'Natural-Blackjack]
           [(< 21 score*) 'Bust]
           [else score*])))
 
 (module+ test
   (check-eqv? (ranks->score (list 'Jack 'Ace))
               'Natural-Blackjack)
+  (check-eqv? (ranks->score (list 'Jack 'Ace) #:split? #t)
+              21)
   (check-eqv? (ranks->score (list 'Jack 10 2))
               'Bust)
   (check-eqv? (ranks->score (list 'Jack 'Queen 'Ace))
