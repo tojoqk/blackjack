@@ -26,7 +26,7 @@
   (define e-graph (inst make-open-graph Player))
 
   (define entry (e-node "Entry" #:type 'entry #:trans (code show-wallet)))
-  (define terminal (e-node "Home" #:type 'entry))
+  (define terminal (e-node "Home" #:type 'terminal))
   (values
    (lambda (outputs)
      (e-graph #:edges (list (e-edge "Go to Home" #:from entry #:to terminal #:priority -1))
@@ -442,12 +442,17 @@
 
 (module+ model
   (provide make-model)
+  (: terminal-node? (-> Node-Info Any))
+  (define (terminal-node? n)
+    (symbol=? (node-info-type n) 'terminal))
+
   (: make-model (->* () (Positive-Integer) (Model Any)))
   (define (make-model [n 4])
     (model
      (thunk
       (define-values (graphs node-init) (bj-wire n))
-      (values graphs node-init (player 100))))))
+      (values graphs node-init (player 100)))
+     terminal-node?)))
 
 (module+ main
   (require racket/cmdline (submod ".." model))
